@@ -30,10 +30,11 @@ class MinecraftPing
 	/** @var ?resource $Socket */
 	private $Socket;
 	private string $ServerAddress;
+	private string $HandshakeAddress;
 	private int $ServerPort;
 	private float $Timeout;
 
-	public function __construct( string $Address, int $Port = 25565, float $Timeout = 2, bool $ResolveSRV = true )
+	public function __construct( string $Address, int $Port = 25565, float $Timeout = 2, bool $ResolveSRV = true, string $HandshakeAddress = '' )
 	{
 		if( $Timeout < 0 )
 		{
@@ -47,6 +48,13 @@ class MinecraftPing
 		if( $ResolveSRV )
 		{
 			SRVResolver::Resolve( $this->ServerAddress, $this->ServerPort );
+		}
+
+		$this->HandshakeAddress = $HandshakeAddress;
+
+		if ( empty( $this->HandshakeAddress ) )
+		{
+			$this->HandshakeAddress = $this->ServerAddress;
 		}
 
 		$this->Connect( );
@@ -98,7 +106,7 @@ class MinecraftPing
 		$Data = "\x00"; // packet ID = 0 (varint)
 
 		$Data .= "\xff\xff\xff\xff\x0f"; // Protocol version (varint)
-		$Data .= self::WriteVarInt( \strlen( $this->ServerAddress ) ) . $this->ServerAddress; // Server (varint len + UTF-8 addr)
+		$Data .= self::WriteVarInt( \strlen( $this->HandshakeAddress ) ) . $this->HandshakeAddress; // Server (varint len + UTF-8 addr)
 		$Data .= \pack( 'n', $this->ServerPort ); // Server port (unsigned short)
 		$Data .= "\x01"; // Next state: status (varint)
 
